@@ -5,7 +5,7 @@ import {ScomGifPicker} from '@scom/scom-gif-picker';
 export default class Module1 extends Module {
     private picker: ScomGifPicker;
 
-    private async handleSelected(value: string) {
+    private async handleSelected(value: any) {
         console.log(value);
     }
 

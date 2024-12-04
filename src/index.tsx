@@ -8,14 +8,16 @@ import {
     Input,
     Switch,
     CardLayout,
-    VStack
+    VStack,
+    application
 } from "@ijstech/components";
 import translations from "./translations.json";
 import { GifModel } from "./model";
+import { IGif } from "./interface";
 
 interface GifPickerElement extends ControlElement {
     apiKey?: string;
-    onGifSelected?: (url: string) => void;
+    onGifSelected?: (gif: IGif) => void;
     onClose?: () => void;
 }
 
@@ -47,7 +49,7 @@ export class ScomGifPicker extends Module {
     private _apiKey: string;
     private gifModel: GifModel = new GifModel();
 
-    onGifSelected: (url: string) => void;
+    onGifSelected: (gif: IGif) => void;
     onClose: () => void;
 
     get apiKey() {
@@ -62,8 +64,10 @@ export class ScomGifPicker extends Module {
     init() {
         this.i18n.init({...translations});
         super.init();
+        this.onGifSelected = this.getAttribute('onGifSelected', true) || this.onGifSelected;
+        this.onClose = this.getAttribute('onClose', true) || this.onClose;
         const apiKey = this.getAttribute('apiKey', true);
-        if (apiKey) this.apiKey = apiKey;
+        this.apiKey = apiKey || application.store.giphy?.apiKey;
         this.bottomObserver = new IntersectionObserver(this.handleIntersect.bind(this), {
             root: null,
             rootMargin: "20px",
@@ -82,6 +86,8 @@ export class ScomGifPicker extends Module {
         this.bottomElm.visible = false;
         this.bottomObserver.unobserve(this.bottomElm);
         this.renderedMap = {};
+        this.currentGifPage = 1;
+        this.totalGifPage = 1;
     }
 
     private handleIntersect(entries, observer) {
@@ -97,7 +103,6 @@ export class ScomGifPicker extends Module {
     private async renderGifCate() {
         this.gridGifCate.clearInnerHTML();
         const data = await this.gifModel.getReactions();
-        // const limitedList = [...data].slice(0, 8);
         for (const cate of data) {
             this.gridGifCate.appendChild(
                 <i-panel
@@ -105,10 +110,7 @@ export class ScomGifPicker extends Module {
                     cursor="pointer"
                     onClick={() => this.onGifSearch(cate.name)}
                 >
-                    <i-image
-                        url={cate.gif.images['fixed_height_still'].url}
-                        width={'100%'} display='block'
-                    ></i-image>
+                    { this.renderImage(cate.gif.images['fixed_height_still'].url) }
                     <i-label
                         caption={cate.name}
                         font={{ size: '1.25rem', weight: 700 }}
@@ -122,8 +124,9 @@ export class ScomGifPicker extends Module {
         
     }
 
-    private selectGif(gif: any) {
-        if (this.onGifSelected) this.onGifSelected(gif.images.original.url);
+    private selectGif(gif: IGif) {
+        if (typeof this.onGifSelected === 'function')
+            this.onGifSelected(gif);
     }
 
     private onIconGifClicked(icon: Icon) {
@@ -172,24 +175,28 @@ export class ScomGifPicker extends Module {
         const { data = [], pagination: { total_count, count } } = result;
         this.totalGifPage = Math.ceil(total_count / count);
 
-        for (const gif of data) {
-            this.gridGif.appendChild(
-                <i-panel
-                    onClick={() => this.selectGif(gif)}
-                    width="100%"
-                    overflow={'hidden'}
-                    background={{ color: Theme.action.hoverBackground }}
-                    cursor="pointer"
-                >
-                    <i-image
-                        url={autoplay ? gif.images.preview_gif.url : gif.images.fixed_height_still.url}
-                        width={'100%'} height='100%' objectFit='cover' display='block'
-                    ></i-image>
-                </i-panel>
-            )
-        }
+        const fragment = document.createDocumentFragment();
+        data.forEach((gif) => {
+            const url = autoplay ? gif.images.fixed_height_small.url : gif.images.fixed_height_small_still.url;
+            const img = this.renderImage(url);
+            img.addEventListener('click', () => this.selectGif(gif));
+            fragment.appendChild(img);
+        });
+        this.gridGif.appendChild(fragment);
+
         this.gifLoading.visible = false;
         this.bottomElm.visible = this.totalGifPage > 1;
+    }
+
+    private renderImage(url: string) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.display = 'block';
+        img.style.cursor = 'pointer';
+        return img;
     }
 
     private onSearch(target: Input) {

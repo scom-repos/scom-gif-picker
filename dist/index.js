@@ -106,9 +106,10 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
         init() {
             this.i18n.init({ ...translations_json_1.default });
             super.init();
+            this.onGifSelected = this.getAttribute('onGifSelected', true) || this.onGifSelected;
+            this.onClose = this.getAttribute('onClose', true) || this.onClose;
             const apiKey = this.getAttribute('apiKey', true);
-            if (apiKey)
-                this.apiKey = apiKey;
+            this.apiKey = apiKey || components_1.application.store.giphy?.apiKey;
             this.bottomObserver = new IntersectionObserver(this.handleIntersect.bind(this), {
                 root: null,
                 rootMargin: "20px",
@@ -125,6 +126,8 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
             this.bottomElm.visible = false;
             this.bottomObserver.unobserve(this.bottomElm);
             this.renderedMap = {};
+            this.currentGifPage = 1;
+            this.totalGifPage = 1;
         }
         handleIntersect(entries, observer) {
             entries.forEach(entry => {
@@ -139,16 +142,15 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
         async renderGifCate() {
             this.gridGifCate.clearInnerHTML();
             const data = await this.gifModel.getReactions();
-            // const limitedList = [...data].slice(0, 8);
             for (const cate of data) {
                 this.gridGifCate.appendChild(this.$render("i-panel", { overflow: 'hidden', cursor: "pointer", onClick: () => this.onGifSearch(cate.name) },
-                    this.$render("i-image", { url: cate.gif.images['fixed_height_still'].url, width: '100%', display: 'block' }),
+                    this.renderImage(cate.gif.images['fixed_height_still'].url),
                     this.$render("i-label", { caption: cate.name, font: { size: '1.25rem', weight: 700 }, position: "absolute", bottom: "0px", display: "block", width: '100%', padding: { left: '0.5rem', top: '0.5rem', right: '0.5rem', bottom: '0.5rem' } })));
             }
         }
         selectGif(gif) {
-            if (this.onGifSelected)
-                this.onGifSelected(gif.images.original.url);
+            if (typeof this.onGifSelected === 'function')
+                this.onGifSelected(gif);
         }
         onIconGifClicked(icon) {
             if (icon.name === 'times') {
@@ -195,12 +197,26 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
             const result = await this.gifModel.getGifs(params);
             const { data = [], pagination: { total_count, count } } = result;
             this.totalGifPage = Math.ceil(total_count / count);
-            for (const gif of data) {
-                this.gridGif.appendChild(this.$render("i-panel", { onClick: () => this.selectGif(gif), width: "100%", overflow: 'hidden', background: { color: Theme.action.hoverBackground }, cursor: "pointer" },
-                    this.$render("i-image", { url: autoplay ? gif.images.preview_gif.url : gif.images.fixed_height_still.url, width: '100%', height: '100%', objectFit: 'cover', display: 'block' })));
-            }
+            const fragment = document.createDocumentFragment();
+            data.forEach((gif) => {
+                const url = autoplay ? gif.images.fixed_height_small.url : gif.images.fixed_height_small_still.url;
+                const img = this.renderImage(url);
+                img.addEventListener('click', () => this.selectGif(gif));
+                fragment.appendChild(img);
+            });
+            this.gridGif.appendChild(fragment);
             this.gifLoading.visible = false;
             this.bottomElm.visible = this.totalGifPage > 1;
+        }
+        renderImage(url) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+            img.style.cursor = 'pointer';
+            return img;
         }
         onSearch(target) {
             this.searchGif(target.value);

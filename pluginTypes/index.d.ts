@@ -63,9 +63,10 @@ declare module "@scom/scom-gif-picker/model.ts" {
 /// <amd-module name="@scom/scom-gif-picker" />
 declare module "@scom/scom-gif-picker" {
     import { ControlElement, Module } from "@ijstech/components";
+    import { IGif } from "@scom/scom-gif-picker/interface.ts";
     interface GifPickerElement extends ControlElement {
         apiKey?: string;
-        onGifSelected?: (url: string) => void;
+        onGifSelected?: (gif: IGif) => void;
         onClose?: () => void;
     }
     global {
@@ -90,7 +91,7 @@ declare module "@scom/scom-gif-picker" {
         private bottomObserver;
         private _apiKey;
         private gifModel;
-        onGifSelected: (url: string) => void;
+        onGifSelected: (gif: IGif) => void;
         onClose: () => void;
         get apiKey(): string;
         set apiKey(value: string);
@@ -105,6 +106,7 @@ declare module "@scom/scom-gif-picker" {
         private onGifSearch;
         private onToggleMainGif;
         private renderGifs;
+        private renderImage;
         private onSearch;
         private searchGif;
         private onGifPlayChanged;
