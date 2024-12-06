@@ -60,6 +60,11 @@ declare module "@scom/scom-gif-picker/model.ts" {
         private fetchReactionGifs;
     }
 }
+/// <amd-module name="@scom/scom-gif-picker/index.css.ts" />
+declare module "@scom/scom-gif-picker/index.css.ts" {
+    export const customCardStyle: string;
+    export const customCatogeryStyle: string;
+}
 /// <amd-module name="@scom/scom-gif-picker" />
 declare module "@scom/scom-gif-picker" {
     import { ControlElement, Module } from "@ijstech/components";
