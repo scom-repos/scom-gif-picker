@@ -14,6 +14,7 @@ import {
 import translations from "./translations.json";
 import { GifModel } from "./model";
 import { IGif } from "./interface";
+import { customCardStyle, customCatogeryStyle } from "./index.css";
 
 interface GifPickerElement extends ControlElement {
     apiKey?: string;
@@ -108,15 +109,21 @@ export class ScomGifPicker extends Module {
                 <i-panel
                     overflow={'hidden'}
                     cursor="pointer"
+                    width={'100%'}
+                    height="max-content"
+                    class={customCardStyle}
+                    border={{radius: '0.25rem'}}
+                    margin={{bottom: '0.5rem'}}
                     onClick={() => this.onGifSearch(cate.name)}
                 >
-                    { this.renderImage(cate.gif.images['fixed_height_still'].url) }
+                    { this.renderImage(cate.gif.images['fixed_width_still'].url) }
                     <i-label
                         caption={cate.name}
-                        font={{ size: '1.25rem', weight: 700 }}
-                        position="absolute" bottom="0px"
+                        font={{ size: '0.875rem', weight: 700, color: Theme.text.primary }}
+                        position="absolute" bottom="-9999px"
                         display="block" width={'100%'}
                         padding={{ left: '0.5rem', top: '0.5rem', right: '0.5rem', bottom: '0.5rem' }}
+                        background={{ color: "linear-gradient(rgba(0, 0, 0, 0), rgba(18, 18, 18, 0.6))" }}
                     ></i-label>
                 </i-panel>
             )
@@ -179,6 +186,8 @@ export class ScomGifPicker extends Module {
         data.forEach((gif) => {
             const url = autoplay ? gif.images.fixed_height_small.url : gif.images.fixed_height_small_still.url;
             const img = this.renderImage(url);
+            img.style.objectFit = 'cover';
+            img.style.height = '100%';
             img.addEventListener('click', () => this.selectGif(gif));
             fragment.appendChild(img);
         });
@@ -192,8 +201,8 @@ export class ScomGifPicker extends Module {
         const img = document.createElement('img');
         img.src = url;
         img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
+        img.style.height = 'auto';
+        img.style.objectFit = 'contain';
         img.style.display = 'block';
         img.style.cursor = 'pointer';
         return img;
@@ -258,11 +267,11 @@ export class ScomGifPicker extends Module {
                         ></i-input>
                     </i-hstack>
                 </i-hstack>
-                <i-card-layout
+                <i-panel
                     id="gridGifCate"
-                    cardMinWidth={'200px'}
-                    cardHeight={'200px'}
-                ></i-card-layout>
+                    width={'100%'}
+                    class={customCatogeryStyle}
+                ></i-panel>
                 <i-vstack id="pnlGif" visible={false}>
                     <i-hstack
                         horizontalAlignment="space-between"

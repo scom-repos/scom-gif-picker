@@ -83,12 +83,29 @@ define("@scom/scom-gif-picker/model.ts", ["require", "exports"], function (requi
     }
     exports.GifModel = GifModel;
 });
-define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@scom/scom-gif-picker/translations.json.ts", "@scom/scom-gif-picker/model.ts"], function (require, exports, components_1, translations_json_1, model_1) {
+define("@scom/scom-gif-picker/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.customCatogeryStyle = exports.customCardStyle = void 0;
+    exports.customCardStyle = components_1.Styles.style({
+        $nest: {
+            '&:hover i-label': {
+                bottom: '0px !important',
+                transition: 'bottom 0.2s ease-in-out'
+            }
+        }
+    });
+    exports.customCatogeryStyle = components_1.Styles.style({
+        columnCount: 4,
+        columnGap: '0.5rem'
+    });
+});
+define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@scom/scom-gif-picker/translations.json.ts", "@scom/scom-gif-picker/model.ts", "@scom/scom-gif-picker/index.css.ts"], function (require, exports, components_2, translations_json_1, model_1, index_css_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomGifPicker = void 0;
-    const Theme = components_1.Styles.Theme.ThemeVars;
-    let ScomGifPicker = class ScomGifPicker extends components_1.Module {
+    const Theme = components_2.Styles.Theme.ThemeVars;
+    let ScomGifPicker = class ScomGifPicker extends components_2.Module {
         constructor() {
             super(...arguments);
             this.currentGifPage = 0;
@@ -109,7 +126,7 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
             this.onGifSelected = this.getAttribute('onGifSelected', true) || this.onGifSelected;
             this.onClose = this.getAttribute('onClose', true) || this.onClose;
             const apiKey = this.getAttribute('apiKey', true);
-            this.apiKey = apiKey || components_1.application.store.giphy?.apiKey;
+            this.apiKey = apiKey || components_2.application.store.giphy?.apiKey;
             this.bottomObserver = new IntersectionObserver(this.handleIntersect.bind(this), {
                 root: null,
                 rootMargin: "20px",
@@ -143,9 +160,9 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
             this.gridGifCate.clearInnerHTML();
             const data = await this.gifModel.getReactions();
             for (const cate of data) {
-                this.gridGifCate.appendChild(this.$render("i-panel", { overflow: 'hidden', cursor: "pointer", onClick: () => this.onGifSearch(cate.name) },
-                    this.renderImage(cate.gif.images['fixed_height_still'].url),
-                    this.$render("i-label", { caption: cate.name, font: { size: '1.25rem', weight: 700 }, position: "absolute", bottom: "0px", display: "block", width: '100%', padding: { left: '0.5rem', top: '0.5rem', right: '0.5rem', bottom: '0.5rem' } })));
+                this.gridGifCate.appendChild(this.$render("i-panel", { overflow: 'hidden', cursor: "pointer", width: '100%', height: "max-content", class: index_css_1.customCardStyle, border: { radius: '0.25rem' }, margin: { bottom: '0.5rem' }, onClick: () => this.onGifSearch(cate.name) },
+                    this.renderImage(cate.gif.images['fixed_width_still'].url),
+                    this.$render("i-label", { caption: cate.name, font: { size: '0.875rem', weight: 700, color: Theme.text.primary }, position: "absolute", bottom: "-9999px", display: "block", width: '100%', padding: { left: '0.5rem', top: '0.5rem', right: '0.5rem', bottom: '0.5rem' }, background: { color: "linear-gradient(rgba(0, 0, 0, 0), rgba(18, 18, 18, 0.6))" } })));
             }
         }
         selectGif(gif) {
@@ -201,6 +218,8 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
             data.forEach((gif) => {
                 const url = autoplay ? gif.images.fixed_height_small.url : gif.images.fixed_height_small_still.url;
                 const img = this.renderImage(url);
+                img.style.objectFit = 'cover';
+                img.style.height = '100%';
                 img.addEventListener('click', () => this.selectGif(gif));
                 fragment.appendChild(img);
             });
@@ -212,8 +231,8 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
             const img = document.createElement('img');
             img.src = url;
             img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
+            img.style.height = 'auto';
+            img.style.objectFit = 'contain';
             img.style.display = 'block';
             img.style.cursor = 'pointer';
             return img;
@@ -239,7 +258,7 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
                     this.$render("i-hstack", { verticalAlignment: "center", padding: { left: '0.75rem', right: '0.75rem' }, border: { radius: '9999px', width: '1px', style: 'solid', color: Theme.divider }, minHeight: 40, width: '100%', background: { color: Theme.input.background }, gap: "4px" },
                         this.$render("i-icon", { width: 16, height: 16, name: 'search', fill: Theme.text.secondary }),
                         this.$render("i-input", { id: "edtGif", placeholder: '$search_for_GIFs', width: '100%', height: '100%', captionWidth: '0px', border: { style: 'none' }, showClearButton: true, onClearClick: this.onClearInput, onKeyUp: this.onSearch }))),
-                this.$render("i-card-layout", { id: "gridGifCate", cardMinWidth: '200px', cardHeight: '200px' }),
+                this.$render("i-panel", { id: "gridGifCate", width: '100%', class: index_css_1.customCatogeryStyle }),
                 this.$render("i-vstack", { id: "pnlGif", visible: false },
                     this.$render("i-hstack", { horizontalAlignment: "space-between", gap: "0.5rem", padding: { left: '0.75rem', right: '0.75rem', top: '0.75rem', bottom: '0.75rem' } },
                         this.$render("i-label", { caption: "$auto-play_GIFs", font: { color: Theme.text.secondary, size: '0.9rem' } }),
@@ -252,7 +271,7 @@ define("@scom/scom-gif-picker", ["require", "exports", "@ijstech/components", "@
         }
     };
     ScomGifPicker = __decorate([
-        (0, components_1.customElements)('i-scom-gif-picker')
+        (0, components_2.customElements)('i-scom-gif-picker')
     ], ScomGifPicker);
     exports.ScomGifPicker = ScomGifPicker;
 });
